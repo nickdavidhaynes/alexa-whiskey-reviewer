@@ -1,0 +1,5 @@
+GetReview about {dram}
+GetReview tell me about {dram}
+GetReview how is {dram}
+GetReview what is {dram} like
+GetReview how {dram} is

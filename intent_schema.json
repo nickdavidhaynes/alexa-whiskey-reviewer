@@ -1,0 +1,13 @@
+{
+  "intents": [
+    {
+      "intent": "GetReview",
+      "slots": [
+        {
+          "name": "dram",
+          "type": "DRAMS"
+        }
+      ]
+    }
+  ]
+}
