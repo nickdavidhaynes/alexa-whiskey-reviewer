@@ -42,7 +42,7 @@ Once the devices captures an utterance, it sends the raw audio file to the Alexa
       "slots": {
         "dram": {
           "name": "dram",
-          "value": "talisker 10"
+          "value": "Talisker 10"
         }
       }
     }
@@ -51,11 +51,21 @@ Once the devices captures an utterance, it sends the raw audio file to the Alexa
 }
 ```
 
-The skill creator then builds a custom web service that consumes this json data and spits out the text for Alexa to recite back. In this case, we would want the text to be: "The Talisker 10 is a respectable dram, with an average rating of 87. It's also an average-priced bottle at $59 for a fifth."
+This response provides some metadata about the request, but more importantly, tells us that the user's intent was `GetReview`, and that a slot called `dram` in that intent was filled with `Talisker 10`. Now what we need to do is build a custom web service that consumes this json data and spits out the text for Alexa to recite back. In this case, we would want the text to be: "The Talisker 10 is a respectable dram, with an average rating of 87. It's also an average-priced bottle at $59 for a fifth."
+
+## The Python code
+
+Now that we know roughly what the Alexa response object looks like, we can write some Python code to handle it and create some text for Alexa to respond with.
+
+The entry point to the code is `lambda_function.lambda_handler`. This function takes the json above and pulls out the intent name and slot values. Then, it looks up the data corresponding to the dram and issues a json response with some text describing that data.
+
+The data in `whiskey_data.json` is from the [reddit Whiskey Archive](https://docs.google.com/spreadsheets/d/1X1HTxkI6SqsdpNSkSSivMzpxNT-oeTbjFFDdEkXD30o/edit#gid=695409533), a big shared spreadsheet of review data from a number of whiskey subreddits like /r/scotch and /r/bourbon. I grabbed this data, cleaned it up a bit, and saved it into json format. Instead of making calls to an outside database to get info about the whiskey, we'll just package this json with our source code and ship it to our service.
+
+Next, we'll build the lambda service that will run this Python code. One important thing to note first, though - our Lambda will run a bare installation of Python 2.7. In other words, you have access to the standard library (plus [boto3](https://boto3.readthedocs.io/en/latest/) for interacting with other AWS resources), but that's it. You can't `pip install` packages. If you write code with dependencies on other PyPI packages, you'll either need to ship the entire dependency with your code or find a way to live without them.
 
 ## Building the Lambda service
 
-We'll use AWS Lambda to create the service that builds our output responses. Lambda AWS's serverless architecture platform - basically, you load a simple script into the service, and whenever the service endpoint is hit, your script is run against the input data. For small projects, this can be quite a bit cheaper and easier than managing a server. You also get a million free Lambda calls with the AWS free tier.
+We'll use AWS Lambda to create the service that builds our output responses. Lambda is AWS's serverless architecture platform - basically, you load a simple script into the service, and whenever the service endpoint is hit, your script is run against the input data. For small projects, this can be quite a bit cheaper and easier than managing a server. You also get a million free Lambda calls with the AWS free tier.
 
 If you don't already have an AWS account, create a new one. Make sure you're in the Northern Virginia region - as of Feb 2017, this is the only region hosting the Alexa service.
 
@@ -70,3 +80,19 @@ The rest of the settings can be left on their defaults for now, so confirm your 
 ## Building the Alexa skill
 
 Now that we have a Lambda to handle our Alexa requests, let's create the skill itself.
+
+If you don't have one already, create an [Amazon developer](https://developer.amazon.com/) account. Once you get signed in, go to the Alexa tab, click getting started on the Alexa Skills Kit, and click create a new skill. Give your skill a reference name (e.g. `whiskey advisor`) and an invocation name (e.g. `whiskey advisor`) that users will speak to trigger your skill.
+
+Defining the iteration happens in the next step. "Intent schema" is where you provide some structured data that defines the details of the intents that your skill will handle. Our whiskey advisor skill will only be handling a single intent, "GetReview". The json I used to define this intent is in `intent_schema.json`.
+
+Next, you'll have to define the slot types that users will reference. In our case, this is a list of the possible whiskeys users will ask about. The Alexa service does a decent-ish job recognizing slot data that isn't explicitly entered in this box, but the more example you give it, the better it will be. An exhaustive list of whiskeys is located in `drams_list.txt`; you can just copy-paste this into the box.
+
+Finally, we need to provide some examples of utterances that we think users might speak to request reviews. A list of the ones I used are in `samples_utterances.txt`. Alexa will do a bit of iterpolation here, but in practice, I've found that the service tends to stick pretty closely to only identifying intents when they are very very similar to the ones you provide. So again, the more of these you provide, the better experience your users will have.
+
+Moving on to configuration - we now have to hook up the Alexa service to our Lamdba. Returning to the Lambda console, look for the ARN of the Lambda function you created (usually in the upper-right corner when viewing a function, it's a long alpha-numeric code starting with `arn:aws:lambda`). Copy the ARN and paste it into the box in the Alexa console configuration tab. Our Alexa skill now knows where to send the parsed intent information.
+
+And that's basically it! The next tab allows you to test your skill - you can type a sample intent into the box and see the json created by the Alexa service and your Lambda for debugging. You can also play Alexa's voice response directly from this tab. From there, follow the rest of the directions to publish your skill, and you're all set.
+
+Hopefully this helps! There's tons more you can do, including more complicated back-and-forth interactions and sending data (e.g. an image) to a mobile device. But really, a lot of the work is just boilerplate that becomes rote after you've gone through it once or twice. 
+
+So - if you can write a Python function, you can make an Alexa skill.
