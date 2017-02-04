@@ -15,9 +15,9 @@ The physical Echo/Dot device is really nothing more than a speaker, microphone, 
 - The intent to pass to the skill
 - "Slot" data that contextualizes the intent.
 
-With the whiskey advisor, we will create a skill with the invocation name "whiskey advisor". We will then create a single intent, "get_review", that can be invoked by saying things like "tell me about {some whiskey}" or "how is {some whiskey}". Putting it all together, a sample utterance might be: "Alexa, ask whiskey advisor to tell me about Talisker 10." In this case, "whiskey advisor" is the invocation name, "tell me about" defines the intent of the question, and "Talisker 10" is a wildcard slot that is filled with the particular whiskey you want to hear about.
+With the whiskey advisor, we will create a skill with the invocation name "whiskey advisor". We will then create a single intent, "GetReview", that can be invoked by saying things like "tell me about {some whiskey}" or "how is {some whiskey}". Putting it all together, a sample utterance might be: "Alexa, ask whiskey advisor to tell me about Talisker 10." In this case, "whiskey advisor" is the invocation name, "tell me about" defines the intent of the question, and "Talisker 10" is a wildcard slot that is filled with the particular whiskey you want to hear about.
 
-Once the devices captures an utterance, it sends the raw audio file to the Alexa cloud service. This is where much of the magic happens - the service translates the audio into text data, parses out the intent (if any valid one was provided), and extracts the values for the slot variables. In the case of the utterance above, the output from the Alexa service is json that looks like this:
+Once the devices captures an utterance, it sends the raw audio file to the Alexa cloud service. This is where much of the magic happens - the service automatically translates the audio into text data, parses out the intent (if any valid one was provided), and extracts the values for the slot variables. In the case of the utterance above, the output from the Alexa service is json that looks like this:
 
 ```
 {
@@ -57,7 +57,7 @@ This response provides some metadata about the request, but more importantly, te
 
 Now that we know roughly what the Alexa response object looks like, we can write some Python code to handle it and create some text for Alexa to respond with.
 
-The entry point to the code is `lambda_function.lambda_handler`. This function takes the json above and pulls out the intent name and slot values. Then, it looks up the data corresponding to the dram and issues a json response with some text describing that data.
+The entry point to the code is `lambda_function.lambda_handler`. This function takes the json above and pulls out the intent name and slot values. Then, it looks up the data corresponding to the dram and issues a json response with some text describing that dram.
 
 The data in `whiskey_data.json` is from the [reddit Whiskey Archive](https://docs.google.com/spreadsheets/d/1X1HTxkI6SqsdpNSkSSivMzpxNT-oeTbjFFDdEkXD30o/edit#gid=695409533), a big shared spreadsheet of review data from a number of whiskey subreddits like /r/scotch and /r/bourbon. I grabbed this data, cleaned it up a bit, and saved it into json format. Instead of making calls to an outside database to get info about the whiskey, we'll just package this json with our source code and ship it to our service.
 
