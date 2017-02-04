@@ -82,7 +82,7 @@ def lambda_handler(event, context):
 
         # short circuit if it's not a recognized whiskey
         if dram_data is None:
-            sorry_response = "Sorry, I don't have an information on {}.".format(
+            sorry_response = "Sorry, I don't have any information on {}.".format(
                                                                       dram_name)
             return build_response(sorry_response)
 
